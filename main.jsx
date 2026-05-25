@@ -63,15 +63,15 @@ function abrirWhatsAppBusiness(tel,mensaje){
   const text=encodeURIComponent(mensaje||'');
   const isMobile=/iphone|ipad|ipod|android/i.test(navigator.userAgent||'');
   const url=isMobile
-    ? `https://wa.me/${phone}?text=${text}`
-    : `https://web.whatsapp.com/send?phone=${phone}&text=${text}`;
+  ? `whatsapp-business://send?phone=${phone}&text=${text}`
+  : `https://web.whatsapp.com/send?phone=${phone}&text=${text}`;
   const opened=window.open(url,'theclinic_whatsapp_cliente','noopener,noreferrer');
   return !!opened;
 }
 async function enviarCorreoRecepcion(data,documentUrl){
   const payload={...data,documentUrl,business:BUSINESS};
   setEmailStatus({status:'sending',folio:data.folio,to:data.correo,message:'Enviando correo automático...'});
-  const res=await fetch('/api/send-reception-email',{
+  const res=await fetch('/api/sendReceptionEmail',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(payload)
