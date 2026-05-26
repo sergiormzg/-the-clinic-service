@@ -22,23 +22,20 @@ export default async function handler(req, res) {
     const equipo = [data.tipo, data.marca, data.modelo].filter(Boolean).join(' ') || 'equipo';
     const documentUrl = String(data.documentUrl || '');
     const business = data.business || {};
+    const phone = business.phoneRaw || business.phone || '8331055266';
 
     const subject = `Recepción de equipo ${folio} - The Clinic`;
-    const text = `Hola ${cliente},\n\nTu equipo ${equipo} quedó registrado con folio ${folio}.\n\nDocumento de recepción:\n${documentUrl}\n\nFalla reportada:\n${data.falla_reportada || '-'}\n\nEstado físico:\n${data.estado_fisico || '-'}\n\nAccesorios:\n${data.accesorios || '-'}\n\nCentro de Servicio The Clinic Laptop's & PC's\nWhatsApp: ${business.phoneRaw || business.phone || '8331055266'}\n${business.address || ''}`;
+    const text = `Saludos, ${cliente}:\n\nTu dispositivo ${equipo} con folio ${folio} ya llegó a nuestro taller. Lo mantendremos bajo nuestro resguardo mientras realizamos el diagnóstico correspondiente. En cuanto tengamos los resultados, nos comunicaremos contigo para informarte los detalles y los siguientes pasos.\n\nContacto: ${phone}${documentUrl ? `\nDescarga aquí tu hoja de recepción: ${documentUrl}` : ''}\n\nAtentamente,\nCentro de Servicio The Clinic Laptop's & PC's\nIng. Sergio Venustiano Ramirez Garnica`;
 
     const html = `
-      <div style="font-family:Arial,sans-serif;line-height:1.45;color:#111">
+      <div style="font-family:Arial,sans-serif;line-height:1.55;color:#111;max-width:720px">
         <h2 style="color:#087c20;margin-bottom:4px">The Clinic Laptop's & PC's</h2>
-        <p>Hola <b>${escapeHtml(cliente)}</b>, tu equipo quedó registrado correctamente.</p>
-        <table style="border-collapse:collapse;width:100%;max-width:680px">
-          <tr><td style="padding:8px;border:1px solid #ddd"><b>Folio</b></td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(folio)}</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><b>Equipo</b></td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(equipo)}</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><b>Falla reportada</b></td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(data.falla_reportada || '-')}</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><b>Estado físico</b></td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(data.estado_fisico || '-')}</td></tr>
-          <tr><td style="padding:8px;border:1px solid #ddd"><b>Accesorios</b></td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(data.accesorios || '-')}</td></tr>
-        </table>
-        ${documentUrl ? `<p><a href="${escapeAttr(documentUrl)}" style="display:inline-block;background:#087c20;color:white;padding:10px 14px;border-radius:6px;text-decoration:none;margin-top:16px">Ver documento de recepción</a></p>` : ''}
-        <p style="margin-top:18px">WhatsApp: <b>${escapeHtml(business.phoneRaw || business.phone || '8331055266')}</b><br>${escapeHtml(business.address || '')}</p>
+        <p>Saludos, <b>${escapeHtml(cliente)}</b>:</p>
+        <p>¡Listo! Tu dispositivo <b>${escapeHtml(equipo)}</b> con folio <b>${escapeHtml(folio)}</b> ya llegó a nuestro taller.</p>
+        <p>Lo mantendremos bajo nuestro resguardo mientras realizamos el diagnóstico correspondiente. En cuanto tengamos los resultados, nos comunicaremos contigo para informarte los detalles y los siguientes pasos.</p>
+        <p>Agradecemos tu preferencia. Si tienes preguntas o necesitas atención personalizada, puedes contactarnos al <b>${escapeHtml(phone)}</b>${documentUrl ? ` &nbsp;|&nbsp; <a href="${escapeAttr(documentUrl)}" download="${escapeAttr(folio)}.pdf" style="color:#087c20">Descarga aquí tu hoja de recepción</a>` : ''}.</p>
+        <p style="margin-top:22px">Atentamente,<br><b>Centro de Servicio The Clinic Laptop's & PC's</b></p>
+        <p style="font-family:'Brush Script MT','Segoe Script',cursive;font-size:22px;margin:8px 0 0;color:#111">Ing. Sergio Venustiano Ramirez Garnica</p>
       </div>`;
 
     const resendRes = await fetch('https://api.resend.com/emails', {
