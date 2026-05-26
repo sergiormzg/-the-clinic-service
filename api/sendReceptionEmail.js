@@ -22,6 +22,8 @@ export default async function handler(req, res) {
     const cliente = String(body.cliente || 'Cliente');
     const equipo = [body.tipo, body.marca, body.modelo].filter(Boolean).join(' ') || 'equipo';
     const documentUrl = String(body.documentUrl || '');
+    const business = body.business || {};
+    const phone = business.phoneRaw || business.phone || '8331055266';
 
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -34,12 +36,14 @@ export default async function handler(req, res) {
         to,
         subject: `Recepción de equipo ${folio} - The Clinic`,
         html: `
-          <div style="font-family:Arial,sans-serif;line-height:1.45;color:#111">
-            <h2>The Clinic Laptop's & PC's</h2>
-            <p>Hola <b>${escapeHtml(cliente)}</b>, tu equipo quedó registrado correctamente.</p>
-            <p><b>Folio:</b> ${escapeHtml(folio)}</p>
-            <p><b>Equipo:</b> ${escapeHtml(equipo)}</p>
-            ${documentUrl ? `<p><a href="${escapeAttr(documentUrl)}">Ver documento de recepción</a></p>` : ''}
+          <div style="font-family:Arial,sans-serif;line-height:1.55;color:#111;max-width:720px">
+            <h2 style="color:#087c20;margin-bottom:4px">The Clinic Laptop's & PC's</h2>
+            <p>Saludos, <b>${escapeHtml(cliente)}</b>:</p>
+            <p>¡Listo! Tu dispositivo <b>${escapeHtml(equipo)}</b> con folio <b>${escapeHtml(folio)}</b> ya llegó a nuestro taller.</p>
+            <p>Lo mantendremos bajo nuestro resguardo mientras realizamos el diagnóstico correspondiente. En cuanto tengamos los resultados, nos comunicaremos contigo para informarte los detalles y los siguientes pasos.</p>
+            <p>Agradecemos tu preferencia. Si tienes preguntas o necesitas atención personalizada, puedes contactarnos al <b>${escapeHtml(phone)}</b>${documentUrl ? ` &nbsp;|&nbsp; <a href="${escapeAttr(documentUrl)}" download="${escapeAttr(folio)}.pdf">Descarga aquí tu hoja de recepción</a>` : ''}.</p>
+            <p style="margin-top:22px">Atentamente,<br><b>Centro de Servicio The Clinic Laptop's & PC's</b></p>
+            <p style="font-family:'Brush Script MT','Segoe Script',cursive;font-size:22px;margin:8px 0 0;color:#111">Ing. Sergio Venustiano Ramirez Garnica</p>
           </div>
         `
       })
