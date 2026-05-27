@@ -2,6 +2,12 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://bvoofazzuddyhargednk.supabase.co'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_aA8YZxvjloP66gIevUpfUg_i92xdWSg'
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+export async function obtenerSesionActual(){const{data,error}=await supabase.auth.getSession();if(error)throw error;return data?.session||null}
+export function observarSesion(callback){return supabase.auth.onAuthStateChange((_event,session)=>callback(session))}
+export async function iniciarSesion(email,password){const{data,error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;return data}
+export async function cerrarSesion(){const{error}=await supabase.auth.signOut();if(error)throw error;return true}
+
 export async function generarFolio(){const{data,error}=await supabase.rpc('generar_folio');if(error)throw error;return data}
 export async function buscarClientePorTelefono(telefono){const{data,error}=await supabase.from('clientes').select('*').eq('telefono',telefono).maybeSingle();if(error)throw error;return data}
 export async function crearCliente(input){const{data,error}=await supabase.from('clientes').insert(input).select('*').single();if(error)throw error;return data}
