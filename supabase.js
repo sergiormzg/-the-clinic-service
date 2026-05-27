@@ -24,6 +24,18 @@ export function publicStorageUrl(bucket, path) {
   return data.publicUrl
 }
 
+export async function crearSignedUrlPdf(storagePath, expiresIn = 86400) {
+  if (!storagePath) return ''
+
+  const { data, error } = await supabase.storage
+    .from('recepcion-pdfs')
+    .createSignedUrl(storagePath, expiresIn)
+
+  if (error) throw error
+
+  return data?.signedUrl || ''
+}
+
 export async function registrarFotoRecepcion(input) {
   const payload = {
     ...input,
@@ -62,7 +74,7 @@ export async function registrarPdfRecepcion(input) {
     nombre_archivo: input.nombre_archivo,
     storage_path: input.storage_path,
     dropbox_path: input.dropbox_path || null,
-    url_publica: input.url_publica || publicStorageUrl('recepcion-pdfs', input.storage_path)
+    url_publica: null
   }
 
   const { data, error } = await supabase
@@ -80,10 +92,9 @@ export async function guardarPdfRecepcion({ recepcion_id, folio, nombre_archivo,
   const filename = nombre_archivo || `${safeFolio}.pdf`
   const path = `${safeFolio}/recepcion-${Date.now()}.pdf`
   const uploaded = await subirPdfRecepcion(path, blob)
-  const url_publica = publicStorageUrl('recepcion-pdfs', uploaded.path)
-  const record = await registrarPdfRecepcion({ recepcion_id, nombre_archivo: filename, storage_path: uploaded.path, url_publica })
-  await actualizarRecepcion(recepcion_id, { ruta_dropbox_pdf: url_publica, nombre_pdf: filename })
-  return { ...record, publicUrl: record.url_publica || url_publica }
+  const record = await registrarPdfRecepcion({ recepcion_id, nombre_archivo: filename, storage_path: uploaded.path })
+  await actualizarRecepcion(recepcion_id, { nombre_pdf: filename })
+  return { ...record, storage_path: uploaded.path }
 }
 
 export async function listarPdfsRecepcion(recepcionId) {
@@ -95,10 +106,7 @@ export async function listarPdfsRecepcion(recepcionId) {
 
   if (error) throw error
 
-  return (data || []).map((p) => ({
-    ...p,
-    publicUrl: p.url_publica || publicStorageUrl('recepcion-pdfs', p.storage_path)
-  }))
+  return data || []
 }
 
 export async function listarFotosRecepcion(recepcionId) {
