@@ -16,6 +16,7 @@ export async function eliminarRecepcion(id){const{data,error}=await supabase.fro
 
 export async function subirFotoRecepcion(path,file){const{data,error}=await supabase.storage.from('recepcion-fotos').upload(path,file,{upsert:true});if(error)throw error;return data}
 export async function subirFirmaRecepcion(path,blob){const{data,error}=await supabase.storage.from('recepcion-firmas').upload(path,blob,{contentType:'image/png',upsert:true});if(error)throw error;return data}
+export async function subirPdfRecepcion(path,blob){const{data,error}=await supabase.storage.from('recepcion-pdfs').upload(path,blob,{contentType:'application/pdf',upsert:true});if(error)throw error;return data}
 
 export function publicStorageUrl(bucket, path) {
   if (!path) return ''
@@ -53,6 +54,51 @@ export async function registrarFirmaRecepcion(input) {
 
   if (error) throw error
   return data
+}
+
+export async function registrarPdfRecepcion(input) {
+  const payload = {
+    recepcion_id: input.recepcion_id,
+    nombre_archivo: input.nombre_archivo,
+    storage_path: input.storage_path,
+    dropbox_path: input.dropbox_path || null,
+    url_publica: input.url_publica || publicStorageUrl('recepcion-pdfs', input.storage_path)
+  }
+
+  const { data, error } = await supabase
+    .from('recepcion_pdfs')
+    .insert(payload)
+    .select('*')
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export async function guardarPdfRecepcion({ recepcion_id, folio, nombre_archivo, blob }) {
+  const safeFolio = String(folio || recepcion_id || 'recepcion').replace(/[^a-zA-Z0-9-_]/g, '-')
+  const filename = nombre_archivo || `${safeFolio}.pdf`
+  const path = `${safeFolio}/recepcion-${Date.now()}.pdf`
+  const uploaded = await subirPdfRecepcion(path, blob)
+  const url_publica = publicStorageUrl('recepcion-pdfs', uploaded.path)
+  const record = await registrarPdfRecepcion({ recepcion_id, nombre_archivo: filename, storage_path: uploaded.path, url_publica })
+  await actualizarRecepcion(recepcion_id, { ruta_dropbox_pdf: url_publica, nombre_pdf: filename })
+  return { ...record, publicUrl: record.url_publica || url_publica }
+}
+
+export async function listarPdfsRecepcion(recepcionId) {
+  const { data, error } = await supabase
+    .from('recepcion_pdfs')
+    .select('*')
+    .eq('recepcion_id', recepcionId)
+    .order('creado_en', { ascending: false })
+
+  if (error) throw error
+
+  return (data || []).map((p) => ({
+    ...p,
+    publicUrl: p.url_publica || publicStorageUrl('recepcion-pdfs', p.storage_path)
+  }))
 }
 
 export async function listarFotosRecepcion(recepcionId) {
